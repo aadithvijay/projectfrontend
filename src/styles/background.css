@@ -1,0 +1,16 @@
+/* ================= GLOBAL BACKGROUND ================= */
+
+body {
+  background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* ================= OVERLAY ON ALL PAGES ================= */
+
+#root {
+  background-color: rgba(255, 255, 255, 0.85);
+  min-height: 100vh;
+}
