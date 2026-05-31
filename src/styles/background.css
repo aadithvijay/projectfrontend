@@ -14,3 +14,180 @@ body {
   background-color: rgba(255, 255, 255, 0.85);
   min-height: 100vh;
 }
+
+/* ================= GLOBAL ================= */
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+table {
+  width: 100%;
+}
+
+/* ================= TABLET ================= */
+
+@media (max-width: 1024px) {
+
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  .p-10 {
+    padding: 1.5rem !important;
+  }
+
+  .gap-10 {
+    gap: 1.5rem !important;
+  }
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  h1 {
+    font-size: 1.8rem !important;
+    text-align: center;
+  }
+
+  h2 {
+    font-size: 1.3rem !important;
+  }
+
+  .text-5xl {
+    font-size: 2rem !important;
+  }
+
+  .text-4xl {
+    font-size: 1.7rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.4rem !important;
+  }
+
+  .p-10 {
+    padding: 1rem !important;
+  }
+
+  .p-8 {
+    padding: 1rem !important;
+  }
+
+  .p-6 {
+    padding: 0.75rem !important;
+  }
+
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  .flex-row {
+    flex-direction: column !important;
+  }
+
+  .min-w-\[350px\] {
+    min-width: 100% !important;
+  }
+
+  /* Navbar */
+
+  nav {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  nav > div {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Cart Cards */
+
+  .cart-card {
+    flex-direction: column !important;
+    text-align: center;
+  }
+
+  .cart-card img {
+    width: 180px !important;
+    height: 180px !important;
+  }
+
+  /* Tables */
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Forms */
+
+  input,
+  textarea,
+  select,
+  button {
+    width: 100%;
+  }
+
+  /* Dashboard cards */
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ================= SMALL MOBILE ================= */
+
+@media (max-width: 480px) {
+
+  .text-5xl {
+    font-size: 1.7rem !important;
+  }
+
+  .text-4xl {
+    font-size: 1.4rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.2rem !important;
+  }
+
+  .rounded-3xl {
+    border-radius: 1rem !important;
+  }
+
+  .rounded-2xl {
+    border-radius: 0.75rem !important;
+  }
+
+  .p-10,
+  .p-8,
+  .p-6 {
+    padding: 0.75rem !important;
+  }
+}
