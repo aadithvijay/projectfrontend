@@ -1,27 +1,32 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import API from "../services/api";
+import { motion, AnimatePresence } from "framer-motion";
+import apiService from "../services/apiService";
 
 function ProductDetails() {
   const { id } = useParams();
+
   const [product, setProduct] = useState(null);
   const [rating, setRating] = useState("");
   const [comment, setComment] = useState("");
 
-  // EDIT STATE
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editRating, setEditRating] = useState("");
   const [editComment, setEditComment] = useState("");
 
-  // LOGGED IN USER ✅ FIXED
-  const currentUser = JSON.parse(localStorage.getItem("userInfo"));
+  const currentUser = JSON.parse(
+    localStorage.getItem("userInfo")
+  );
 
-  //FETCH PRODUCT 
-
+  // FETCH PRODUCT
   const fetchProduct = async () => {
     try {
-      const { data } = await API.get(`/products/${id}`);
-      setProduct(data);
+      const response = await apiService(
+        "GET",
+        `/api/products/${id}`
+      );
+
+      setProduct(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -31,284 +36,486 @@ function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // ADD TO CART 
-
+  // ADD TO CART
   const addToCart = async () => {
     try {
-      await API.post("/cart", {
+      await apiService("POST", "/api/cart", {
         product: product._id,
         quantity: 1,
       });
+
       alert("Added To Cart 🛒");
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
       alert("Failed To Add Cart");
     }
   };
 
-  //ADD TO WISHLIST 
-
+  // ADD TO WISHLIST
   const addToWishlist = async () => {
     try {
-      await API.post("/wishlist", {
+      await apiService("POST", "/api/wishlist", {
         product: product._id,
       });
+
       alert("Added To Wishlist ❤️");
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
       alert("Failed To Add Wishlist");
     }
   };
 
-  //SUBMIT REVIEW
-
+  // SUBMIT REVIEW
   const submitReview = async () => {
     try {
-      await API.post(`/products/${product._id}/reviews`, {
-        rating,
-        comment,
-      });
+      await apiService(
+        "POST",
+        `/api/products/${product._id}/reviews`,
+        {
+          rating,
+          comment,
+        }
+      );
+
       alert("Review Added ⭐");
+
       setRating("");
       setComment("");
+
       fetchProduct();
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
       alert("Review Failed");
     }
   };
 
-  //DELETE REVIEW
-
+  // DELETE REVIEW
   const deleteReview = async (reviewId) => {
-    if (!window.confirm("Delete this review?")) return;
+    if (!window.confirm("Delete this review?"))
+      return;
+
     try {
-      await API.delete(`/products/${product._id}/reviews/${reviewId}`);
+      await apiService(
+        "DELETE",
+        `/api/products/${product._id}/reviews/${reviewId}`
+      );
+
       alert("Review Deleted");
       fetchProduct();
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
       alert("Failed To Delete Review");
     }
   };
 
-  //OPEN EDIT
-
+  // OPEN EDIT
   const openEdit = (review) => {
     setEditingReviewId(review._id);
     setEditRating(review.rating);
     setEditComment(review.comment);
   };
 
-  //SUBMIT EDIT
-
+  // SUBMIT EDIT
   const submitEdit = async (reviewId) => {
     try {
-      await API.put(`/products/${product._id}/reviews/${reviewId}`, {
-        rating: editRating,
-        comment: editComment,
-      });
+      await apiService(
+        "PUT",
+        `/api/products/${product._id}/reviews/${reviewId}`,
+        {
+          rating: editRating,
+          comment: editComment,
+        }
+      );
+
       alert("Review Updated ✅");
+
       setEditingReviewId(null);
+
       fetchProduct();
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
       alert("Failed To Update Review");
     }
   };
 
-  //LOADING
+  // PAGE ANIMATION
+  const pageVariants = {
+    hidden: {
+      opacity: 0,
+    },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.7,
+      },
+    },
+  };
 
+  // PRODUCT SECTION ANIMATION
+  const productVariants = {
+    hidden: {
+      opacity: 0,
+      y: 40,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+      },
+    },
+  };
+
+  // REVIEW CARD ANIMATION
+  const reviewVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+      },
+    },
+  };
+
+  // BUTTON ANIMATION
+  const buttonHover = {
+    scale: 1.05,
+    y: -2,
+  };
+
+  const buttonTap = {
+    scale: 0.96,
+  };
+
+  // IMAGE ANIMATION
+  const imageHover = {
+    scale: 1.05,
+    transition: {
+      duration: 0.3,
+    },
+  };
+
+  // LOADING SCREEN
   if (!product) {
-    return <div className="p-10 text-2xl">Loading...</div>;
+    return (
+      <div
+        className="min-h-screen flex justify-center items-center"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <motion.div
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 1,
+            ease: "linear",
+          }}
+          className="w-16 h-16 border-4 border-white border-t-transparent rounded-full"
+        />
+      </div>
+    );
   }
 
+
   return (
-    <div className="p-10">
-      <div className="grid md:grid-cols-2 gap-10">
+  <motion.div
+    variants={pageVariants}
+    initial="hidden"
+    animate="visible"
+    className="min-h-screen p-10 bg-gradient-to-br from-gray-50 to-gray-100"
+  >
+    <motion.div
+      variants={productVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid md:grid-cols-2 gap-10"
+    >
+      {/* IMAGE */}
+      <motion.div
+        whileHover={imageHover}
+        className="overflow-hidden rounded-3xl shadow-2xl"
+      >
+        <img
+          src={product.image}
+          alt={product.title}
+          className="w-full h-[500px] object-cover"
+        />
+      </motion.div>
 
-        {/* IMAGE */}
-        <div>
-          <img
-            src={product.image}
-            alt={product.title}
-            className="w-full h-[500px] object-cover rounded-xl"
-          />
-        </div>
+      {/* DETAILS */}
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-3xl p-8 shadow-xl"
+      >
+        <h1 className="text-5xl font-bold mb-6">
+          {product.title}
+        </h1>
 
-        {/* DETAILS */}
-        <div>
-          <h1 className="text-5xl font-bold mb-6">{product.title}</h1>
-          <p className="text-gray-600 text-lg mb-6">{product.description}</p>
-          <p className="text-3xl font-semibold mb-4">₹ {product.price}</p>
-          <p className="text-xl mb-4">
-            ⭐ {product.rating?.toFixed(1)} ({product.numReviews} Reviews)
+        <p className="text-gray-600 text-lg mb-6 leading-relaxed">
+          {product.description}
+        </p>
+
+        <p className="text-4xl font-bold text-indigo-600 mb-4">
+          ₹ {product.price}
+        </p>
+
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-yellow-500 text-2xl">
+            ⭐
+          </span>
+
+          <p className="text-xl">
+            {product.rating?.toFixed(1)}
+            <span className="text-gray-500 ml-2">
+              ({product.numReviews} Reviews)
+            </span>
           </p>
-          <p className="text-xl mb-10">Category: {product.category}</p>
-
-          <div className="flex gap-4 flex-wrap">
-            <button
-              onClick={addToCart}
-              className="bg-black text-white px-8 py-4 rounded-lg hover:bg-gray-800"
-            >
-              Add To Cart
-            </button>
-            <button
-              onClick={addToWishlist}
-              className="bg-pink-500 text-white px-8 py-4 rounded-lg hover:bg-pink-600"
-            >
-              Wishlist ❤️
-            </button>
-          </div>
         </div>
 
-      </div>
+        <p className="text-xl mb-10 text-gray-700">
+          Category:
+          <span className="font-semibold ml-2">
+            {product.category}
+          </span>
+        </p>
 
-      {/* REVIEWS SECTION */}
+        <div className="flex gap-4">
 
-      <div className="mt-16">
-        <h2 className="text-4xl font-bold mb-8">Reviews ⭐</h2>
-
-        {/* REVIEW FORM */}
-        <div className="grid gap-4 mb-12 max-w-xl">
-
-          <select
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-            className="border p-4 rounded"
+          <motion.button
+            whileHover={buttonHover}
+            whileTap={buttonTap}
+            onClick={addToCart}
+            className="bg-black text-white px-8 py-4 rounded-xl shadow-lg hover:shadow-2xl transition-all"
           >
-            <option value="">Select Rating</option>
-            <option value="1">1 Star</option>
-            <option value="2">2 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="5">5 Stars</option>
-          </select>
+            Add To Cart 🛒
+          </motion.button>
 
-          <textarea
-            placeholder="Write Your Review..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="border p-4 rounded h-32"
-          />
-
-          <button
-            onClick={submitReview}
-            className="bg-yellow-500 text-white py-4 rounded-lg hover:bg-yellow-600"
+          <motion.button
+            whileHover={{
+              scale: 1.05,
+              backgroundColor: "#db2777",
+            }}
+            whileTap={buttonTap}
+            onClick={addToWishlist}
+            className="bg-pink-500 text-white px-8 py-4 rounded-xl shadow-lg hover:shadow-2xl transition-all"
           >
-            Submit Review
-          </button>
+            Wishlist ❤️
+          </motion.button>
 
         </div>
+      </motion.div>
+    </motion.div>
 
-        {/* REVIEWS LIST */}
-        <div className="space-y-6">
+    {/* REVIEWS */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.4 }}
+      className="mt-16"
+    >
+      <h2 className="text-4xl font-bold mb-8">
+        Reviews ⭐
+      </h2>
 
-          {product.reviews && product.reviews.length === 0 ? (
+      {/* REVIEW FORM */}
+      <motion.div
+        whileHover={{
+          y: -3,
+        }}
+        className="grid gap-4 mb-12 max-w-xl bg-white p-6 rounded-3xl shadow-xl"
+      >
 
-            <p className="text-xl">No Reviews Yet</p>
+        <select
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+          className="border p-4 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400"
+        >
+          <option value="">Select Rating</option>
+          <option value="1">1 ⭐</option>
+          <option value="2">2 ⭐</option>
+          <option value="3">3 ⭐</option>
+          <option value="4">4 ⭐</option>
+          <option value="5">5 ⭐</option>
+        </select>
 
-          ) : (
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Write your review..."
+          className="border p-4 rounded-xl h-32 outline-none focus:ring-2 focus:ring-yellow-400"
+        />
 
-            product.reviews?.map((review) => (
+        <motion.button
+          whileHover={{
+            scale: 1.03,
+          }}
+          whileTap={{
+            scale: 0.96,
+          }}
+          onClick={submitReview}
+          className="bg-yellow-500 text-white py-4 rounded-xl font-semibold shadow-lg"
+        >
+          Submit Review
+        </motion.button>
 
-              <div
-                key={review._id}
-                className="border p-6 rounded-xl shadow"
-              >
+      </motion.div>
 
-                {/* REVIEW HEADER */}
-                <div className="flex justify-between items-start mb-2">
+      {/* REVIEWS LIST */}
+      <div className="space-y-6">
 
-                  <div>
-                    <h3 className="text-2xl font-bold">{review.name}</h3>
-                    <p className="text-yellow-500">⭐ {review.rating}</p>
-                  </div>
+        <AnimatePresence>
 
-                  {/* EDIT / DELETE — only show to review owner */}
-                  {currentUser &&
-                    currentUser._id === review.user?.toString() && (
+          {product.reviews?.map((review) => (
+
+            <motion.div
+              key={review._id}
+              variants={reviewVariants}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0 }}
+              whileHover={{
+                y: -4,
+                boxShadow:
+                  "0 15px 30px rgba(0,0,0,0.1)",
+              }}
+              className="border bg-white p-6 rounded-3xl shadow-lg"
+            >
+
+              <div className="flex justify-between">
+
+                <div>
+                  <h3 className="text-xl font-bold">
+                    {review.name}
+                  </h3>
+
+                  <p className="text-yellow-500 font-semibold">
+                    ⭐ {review.rating}
+                  </p>
+                </div>
+
+                {currentUser &&
+                  currentUser._id === review.user && (
+
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => openEdit(review)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600"
+
+                      <motion.button
+                        whileHover={{
+                          scale: 1.05,
+                        }}
+                        whileTap={{
+                          scale: 0.95,
+                        }}
+                        onClick={() =>
+                          openEdit(review)
+                        }
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg"
                       >
-                        Edit ✏️
-                      </button>
-                      <button
-                        onClick={() => deleteReview(review._id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
+                        Edit
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{
+                          scale: 1.05,
+                        }}
+                        whileTap={{
+                          scale: 0.95,
+                        }}
+                        onClick={() =>
+                          deleteReview(review._id)
+                        }
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg"
                       >
-                        Delete 🗑️
-                      </button>
+                        Delete
+                      </motion.button>
+
                     </div>
                   )}
 
-                </div>
-
-                {/* EDIT FORM */}
-                {editingReviewId === review._id ? (
-
-                  <div className="grid gap-3 mt-4">
-
-                    <select
-                      value={editRating}
-                      onChange={(e) => setEditRating(e.target.value)}
-                      className="border p-3 rounded"
-                    >
-                      <option value="1">1 Star</option>
-                      <option value="2">2 Stars</option>
-                      <option value="3">3 Stars</option>
-                      <option value="4">4 Stars</option>
-                      <option value="5">5 Stars</option>
-                    </select>
-
-                    <textarea
-                      value={editComment}
-                      onChange={(e) => setEditComment(e.target.value)}
-                      className="border p-3 rounded h-24"
-                    />
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => submitEdit(review._id)}
-                        className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
-                      >
-                        Save ✅
-                      </button>
-                      <button
-                        onClick={() => setEditingReviewId(null)}
-                        className="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-
-                  </div>
-
-                ) : (
-
-                  <p className="text-gray-700 mt-2">{review.comment}</p>
-
-                )}
-
               </div>
 
-            ))
+              {editingReviewId === review._id ? (
 
-          )}
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    height: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    height: "auto",
+                  }}
+                  className="mt-4 space-y-3"
+                >
 
-        </div>
+                  <select
+                    value={editRating}
+                    onChange={(e) =>
+                      setEditRating(e.target.value)
+                    }
+                    className="border p-3 rounded-lg"
+                  >
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+
+                  <textarea
+                    value={editComment}
+                    onChange={(e) =>
+                      setEditComment(e.target.value)
+                    }
+                    className="border p-3 rounded-lg w-full"
+                  />
+
+                  <motion.button
+                    whileHover={{
+                      scale: 1.05,
+                    }}
+                    whileTap={{
+                      scale: 0.95,
+                    }}
+                    onClick={() =>
+                      submitEdit(review._id)
+                    }
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                  >
+                    Save
+                  </motion.button>
+
+                </motion.div>
+
+              ) : (
+
+                <p className="mt-4 text-gray-700 leading-relaxed">
+                  {review.comment}
+                </p>
+
+              )}
+
+            </motion.div>
+
+          ))}
+
+        </AnimatePresence>
 
       </div>
-
-    </div>
-  );
+    </motion.div>
+  </motion.div>
+);
 }
 
 export default ProductDetails;

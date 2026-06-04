@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import API from "../services/api";
+import apiService from "../services/apiService";
 
 // REGISTER CHART
 
@@ -28,20 +28,19 @@ function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [deletingOrderId, setDeletingOrderId] = useState(null);
 
-  // FETCH DASHBOARD DATA 
+  // FETCH DASHBOARD DATA
 
   const fetchDashboardData = async () => {
     try {
-      const productsRes = await API.get("/products");
+      const productsRes = await apiService("GET", "/api/products");
       setProducts(productsRes.data);
 
-      const ordersRes = await API.get("/orders");
+      const ordersRes = await apiService("GET", "/api/orders");
       setOrders(ordersRes.data);
 
-      const usersRes = await API.get("/users");
+      const usersRes = await apiService("GET", "/api/users");
       setUsers(usersRes.data);
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
     }
   };
@@ -50,50 +49,48 @@ function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
-  // UPDATE ORDER STATUS 
+  // UPDATE ORDER STATUS
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      await API.put(`/orders/${orderId}`, {
+      await apiService("PUT", `/api/orders/${orderId}`, {
         orderStatus: newStatus,
       });
       fetchDashboardData();
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
     }
   };
 
-  //  DELETE ORDER 
+  // DELETE ORDER
 
   const deleteOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
+
     try {
       setDeletingOrderId(orderId);
-      await API.delete(`/orders/${orderId}`);
+      await apiService("DELETE", `/api/orders/${orderId}`);
       fetchDashboardData();
-    } 
-    catch (error) {
+    } catch (error) {
       console.log(error);
-    } 
-    finally {
+    } finally {
       setDeletingOrderId(null);
     }
   };
 
-  //  SALES REVENUE 
+  // SALES REVENUE
 
   const salesRevenue = orders.reduce((acc, order) => {
     return acc + Number(order.totalPrice || 0);
   }, 0);
 
-  // INVENTORY VALUE 
+  // INVENTORY VALUE
 
   const inventoryValue = products.reduce((acc, product) => {
     return acc + Number(product.price || 0);
   }, 0);
 
-  //  CHART DATA 
+  // CHART DATA
 
   const chartData = {
     labels: ["Users", "Products", "Orders"],
@@ -117,7 +114,7 @@ function AdminDashboard() {
     ],
   };
 
-  // CHART OPTIONS 
+  // CHART OPTIONS
 
   const chartOptions = {
     plugins: {
@@ -132,7 +129,6 @@ function AdminDashboard() {
   };
 
   return (
-
     <div
       className="p-10 min-h-screen"
       style={{
@@ -143,8 +139,7 @@ function AdminDashboard() {
         backgroundAttachment: "fixed",
       }}
     >
-
-      {/*  HEADING */}
+      {/* HEADING */}
 
       <h1 className="text-5xl font-bold mb-12 text-white drop-shadow-lg">
         Admin Dashboard
@@ -230,7 +225,6 @@ function AdminDashboard() {
         {orders.length === 0 ? (
           <p className="text-xl text-gray-500">No orders found.</p>
         ) : (
-
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
 
@@ -255,7 +249,6 @@ function AdminDashboard() {
                     key={order._id}
                     className="hover:bg-gray-50 border-b transition-colors duration-200"
                   >
-
                     <td className="p-4">{index + 1}</td>
 
                     <td className="p-4 text-sm text-gray-500">
@@ -316,7 +309,7 @@ function AdminDashboard() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
 
-                    {/*DELETE BUTTON */}
+                    {/* DELETE BUTTON */}
 
                     <td className="p-4">
                       <button
@@ -376,13 +369,11 @@ function AdminDashboard() {
 
             </table>
           </div>
-
         )}
 
       </div>
 
     </div>
-
   );
 }
 

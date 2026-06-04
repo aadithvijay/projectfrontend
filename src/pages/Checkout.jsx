@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { motion, AnimatePresence } from "framer-motion";
+import apiService from "../services/apiService";
 
 function Checkout() {
   const navigate = useNavigate();
@@ -8,21 +9,18 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [step, setStep] = useState(1);
 
-  // STEP 1 - CHOOSE PAYMENT 
-
+  // STEP 1 - CHOOSE PAYMENT
   const handlePaymentSelect = (method) => {
     setPaymentMethod(method);
   };
 
-  // STEP 2 - PROCEED 
-
+  // STEP 2 - PROCEED
   const handleProceed = (e) => {
     e.preventDefault();
 
     if (!shippingAddress) {
       alert("Please enter shipping address");
       return;
-
     }
 
     if (!paymentMethod) {
@@ -31,149 +29,206 @@ function Checkout() {
     }
 
     setStep(2);
-
   };
 
-  // PLACE COD ORDER 
-
+  // PLACE COD ORDER
   const placeCODOrder = async () => {
-
     try {
-
-      await API.post("/orders", {
-        shippingAddress,
-        paymentMethod: "COD",
-      });
+      await apiService(
+        "POST",
+        "/api/orders",
+        {
+          shippingAddress,
+          paymentMethod: "COD",
+        }
+      );
 
       alert("Order Placed Successfully");
-
       navigate("/myorders");
-
     } catch (error) {
       console.log(error);
       alert("Something went wrong");
-
     }
-
   };
 
-  //PLACE STRIPE ORDER
-
+  // PLACE STRIPE ORDER
   const placeStripeOrder = async () => {
-
     try {
+      const cartResponse = await apiService(
+        "GET",
+        "/api/cart"
+      );
 
-      // FETCH CART ITEMS
-      const { data: cartItems } =
-        await API.get("/cart");
+      const cartItems = cartResponse.data;
 
-      // CREATE STRIPE SESSION
-      const response = await API.post(
-        "/payment/create-checkout-session",
+      const response = await apiService(
+        "POST",
+        "/api/payment/create-checkout-session",
         {
           cartItems,
           shippingAddress,
         }
       );
 
-      // REDIRECT TO STRIPE
-      window.location.href =
-        response.data.url;
-
+      window.location.href = response.data.url;
     } catch (error) {
       console.log(error);
       alert(
         error.response?.data?.message ||
         "Stripe payment failed"
       );
-
     }
+  };
 
+  // PAGE ANIMATION
+  const pageVariants = {
+    hidden: {
+      opacity: 0,
+    },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.7,
+      },
+    },
+  };
+
+  // STEP SWITCHING ANIMATION
+  const stepVariants = {
+    hidden: {
+      opacity: 0,
+      x: 40,
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.4,
+      },
+    },
+    exit: {
+      opacity: 0,
+      x: -40,
+      transition: {
+        duration: 0.3,
+      },
+    },
+  };
+
+  // CARD HOVER EFFECT
+  const cardHover = {
+    y: -5,
+    scale: 1.02,
+    transition: {
+      duration: 0.2,
+    },
+  };
+
+  // BUTTON EFFECTS
+  const buttonHover = {
+    scale: 1.03,
+  };
+
+  const buttonTap = {
+    scale: 0.96,
   };
 
   return (
+  <motion.div
+    variants={pageVariants}
+    initial="hidden"
+    animate="visible"
+    className="flex justify-center items-center min-h-screen p-10 relative overflow-hidden"
+    style={{
+      backgroundImage:
+        "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundAttachment: "fixed",
+    }}
+  >
+    
 
-    <div
-      className="flex justify-center items-center min-h-screen p-10"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7 }}
+      whileHover={cardHover}
+      className="relative z-10 w-full max-w-xl bg-white/90 backdrop-blur-md shadow-2xl p-10 rounded-3xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)] transition-all duration-300"
     >
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-4xl font-bold mb-2 text-center text-gray-800"
+      >
+        Checkout
+      </motion.h1>
 
-      <div className="w-full max-w-xl bg-white bg-opacity-90 backdrop-blur-md shadow-2xl p-10 rounded-3xl">
+      <p className="text-center text-gray-500 mb-8">
+        {step === 1
+          ? "Fill in your details"
+          : "Confirm your order"}
+      </p>
 
-        <h1 className="text-4xl font-bold mb-2 text-center text-gray-800">
-          Checkout
-        </h1>
+      {/* STEP INDICATOR */}
+      <div className="flex items-center justify-center gap-4 mb-10">
 
-        <p className="text-center text-gray-500 mb-8">
-          {step === 1
-            ? "Fill in your details"
-            : "Confirm your order"}
-        </p>
+        <motion.div
+          animate={{
+            scale: step >= 1 ? 1.1 : 1,
+          }}
+          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+            step >= 1 ? "bg-black" : "bg-gray-300"
+          }`}
+        >
+          1
+        </motion.div>
 
-        {/*  STEP INDICATOR  */}
+        <div
+          className={`flex-1 h-1 rounded transition-all duration-500 ${
+            step >= 2 ? "bg-black" : "bg-gray-300"
+          }`}
+        />
 
-        <div className="flex items-center justify-center gap-4 mb-10">
+        <motion.div
+          animate={{
+            scale: step >= 2 ? 1.1 : 1,
+          }}
+          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+            step >= 2 ? "bg-black" : "bg-gray-300"
+          }`}
+        >
+          2
+        </motion.div>
 
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-              step >= 1
-                ? "bg-black"
-                : "bg-gray-300"
-            }`}
-          >
-            1
-          </div>
+      </div>
 
-          <div
-            className={`flex-1 h-1 rounded ${
-              step >= 2
-                ? "bg-black"
-                : "bg-gray-300"
-            }`}
-          />
+      <AnimatePresence mode="wait">
 
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-              step >= 2
-                ? "bg-black"
-                : "bg-gray-300"
-            }`}
-          >
-            2
-          </div>
-
-        </div>
-
-        {/*  STEP 1  */}
-
+        {/* STEP 1 */}
         {step === 1 && (
-
-          <div>
-
-            {/* SHIPPING ADDRESS */}
-
+          <motion.div
+            key="step1"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
             <label className="block text-gray-700 font-semibold mb-2">
               Shipping Address
             </label>
 
-            <textarea
-              placeholder="Enter your full shipping address..."
-              rows="4"
-              value={shippingAddress}
-              onChange={(e) =>
-                setShippingAddress(e.target.value)
-              }
-              className="w-full border border-gray-200 p-4 rounded-xl mb-8 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-              required
-            />
-
-            {/* PAYMENT METHOD */}
+            <motion.textarea
+  whileTap={{ scale: 1.01 }}
+  placeholder="Enter your full shipping address..."
+  rows="4"
+  value={shippingAddress}
+  onChange={(e) =>
+    setShippingAddress(e.target.value)
+  }
+  className="w-full border p-4 rounded-xl mb-8 outline-none focus:shadow-lg focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+/>
 
             <label className="block text-gray-700 font-semibold mb-4">
               Select Payment Method
@@ -181,176 +236,124 @@ function Checkout() {
 
             <div className="grid grid-cols-2 gap-4 mb-8">
 
-              {/* COD */}
-
-              <div
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  y: -4,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                }}
                 onClick={() =>
                   handlePaymentSelect("COD")
                 }
                 className={`cursor-pointer border-2 rounded-2xl p-6 text-center transition-all duration-300 ${
                   paymentMethod === "COD"
-                    ? "border-black bg-black text-white"
-                    : "border-gray-200 hover:border-gray-400"
+                    ? "border-black bg-black text-white shadow-xl"
+                    : "border-gray-200 bg-white"
                 }`}
               >
+                💵 Cash on Delivery
+              </motion.div>
 
-                <p className="text-4xl mb-2">
-                  💵
-                </p>
-
-                <p className="font-bold text-lg">
-                  Cash on Delivery
-                </p>
-
-                <p
-                  className={`text-sm mt-1 ${
-                    paymentMethod === "COD"
-                      ? "text-gray-300"
-                      : "text-gray-500"
-                  }`}
-                >
-                  Pay when delivered
-                </p>
-
-              </div>
-
-              {/* STRIPE */}
-
-              <div
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  y: -4,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                }}
                 onClick={() =>
                   handlePaymentSelect("Stripe")
                 }
                 className={`cursor-pointer border-2 rounded-2xl p-6 text-center transition-all duration-300 ${
                   paymentMethod === "Stripe"
-                    ? "border-indigo-600 bg-indigo-600 text-white"
-                    : "border-gray-200 hover:border-gray-400"
+                    ? "border-indigo-600 bg-indigo-600 text-white shadow-xl"
+                    : "border-gray-200 bg-white"
                 }`}
               >
-
-                <p className="text-4xl mb-2">
-                  💳
-                </p>
-
-                <p className="font-bold text-lg">
-                  Pay with Stripe
-                </p>
-
-                <p
-                  className={`text-sm mt-1 ${
-                    paymentMethod === "Stripe"
-                      ? "text-indigo-200"
-                      : "text-gray-500"
-                  }`}
-                >
-                  Secure online payment
-                </p>
-
-              </div>
+                💳 Stripe Payment
+              </motion.div>
 
             </div>
 
-            {/* PROCEED BUTTON */}
-
-            <button
+            <motion.button
+              whileHover={buttonHover}
+              whileTap={buttonTap}
               onClick={handleProceed}
-              className="w-full bg-black text-white py-4 rounded-xl text-lg font-semibold hover:bg-gray-800 transition-all duration-300"
+              className="w-full bg-black hover:bg-gray-900 text-white py-4 rounded-xl shadow-lg transition-all"
             >
               Proceed
-            </button>
-
-          </div>
-
+            </motion.button>
+          </motion.div>
         )}
 
         {/* STEP 2 */}
-
         {step === 2 && (
+          <motion.div
+            key="step2"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-gray-50 p-6 rounded-2xl mb-8"
+            >
+              <p>
+                <b>Address:</b> {shippingAddress}
+              </p>
 
-          <div>
-
-            {/* ORDER SUMMARY */}
-
-            <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-
-              <h2 className="text-xl font-bold mb-4 text-gray-800">
-                Order Summary
-              </h2>
-
-              <div className="flex justify-between mb-3">
-
-                <span className="text-gray-500">
-                  Shipping Address
-                </span>
-
-                <span className="font-semibold text-right max-w-xs">
-                  {shippingAddress}
-                </span>
-
-              </div>
-
-              <div className="flex justify-between">
-
-                <span className="text-gray-500">
-                  Payment Method
-                </span>
-
-                <span
-                  className={`font-bold px-3 py-1 rounded-full text-sm ${
-                    paymentMethod === "COD"
-                      ? "bg-black text-white"
-                      : "bg-indigo-600 text-white"
-                  }`}
-                >
-                  {paymentMethod === "COD"
-                    ? "Cash on Delivery"
-                    : "Stripe"}
-                </span>
-
-              </div>
-
-            </div>
-
-            {/* CONFIRM BUTTON */}
+              <p>
+                <b>Payment:</b> {paymentMethod}
+              </p>
+            </motion.div>
 
             {paymentMethod === "COD" ? (
-
-              <button
+              <motion.button
+                whileHover={buttonHover}
+                whileTap={buttonTap}
                 onClick={placeCODOrder}
-                className="w-full bg-black text-white py-4 rounded-xl text-lg font-semibold hover:bg-gray-800 transition-all duration-300"
+                className="w-full bg-black hover:bg-gray-900 text-white py-4 rounded-xl shadow-lg transition-all"
               >
                 Confirm Order
-              </button>
-
+              </motion.button>
             ) : (
-
-              <button
+              <motion.button
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow:
+                    "0 10px 25px rgba(79,70,229,0.4)",
+                }}
+                whileTap={buttonTap}
                 onClick={placeStripeOrder}
-                className="w-full bg-indigo-600 text-white py-4 rounded-xl text-lg font-semibold hover:bg-indigo-700 transition-all duration-300"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl shadow-lg transition-all"
               >
                 Pay with Stripe
-              </button>
-
+              </motion.button>
             )}
 
-            {/* BACK BUTTON */}
-
-            <button
+            <motion.button
+              whileHover={{
+                scale: 1.02,
+              }}
+              whileTap={{
+                scale: 0.98,
+              }}
               onClick={() => setStep(1)}
-              className="w-full mt-4 border border-gray-300 text-gray-600 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-300"
+              className="w-full mt-4 border py-4 rounded-xl bg-white hover:bg-gray-50 transition-all"
             >
               Back
-            </button>
-
-          </div>
-
+            </motion.button>
+          </motion.div>
         )}
 
-      </div>
-
-    </div>
-
-  );
-
+      </AnimatePresence>
+    </motion.div>
+  </motion.div>
+);
 }
-
 export default Checkout;

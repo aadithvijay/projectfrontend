@@ -23,15 +23,10 @@ import AdminRoute from "./components/AdminRoute";
 function App() {
 
   return (
-
     <BrowserRouter>
-
       <Navbar />
-
       <Routes>
-
         {/*PUBLIC ROUTES */}
-
         <Route
           path="/"
           element={<Home />}
@@ -108,11 +103,8 @@ function App() {
         />
 
       </Routes>
-
     </BrowserRouter>
-
   );
-
 }
 
 export default App;

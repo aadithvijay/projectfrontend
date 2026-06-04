@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 
 function ProductCard({ product }) {
   return (
-    <div className="border rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+    <div className="border rounded-xl shadow-md overflow-hidden hover:shadow-xl transition h-full flex flex-col">
+      
       <Link to={`/product/${product._id}`}>
         <img
           src={product.image}
@@ -11,10 +12,10 @@ function ProductCard({ product }) {
         />
       </Link>
 
-      <div className="p-4">
-
+      <div className="p-4 flex flex-col flex-1">
+        
         <Link to={`/product/${product._id}`}>
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 className="text-2xl font-bold mb-2 min-h-[64px]">
             {product.title}
           </h2>
         </Link>
@@ -24,11 +25,11 @@ function ProductCard({ product }) {
         </p>
 
         <p className="text-xl font-semibold mb-4">
-          ₹ {product.price}
+          ₹ {product.price.toLocaleString()}
         </p>
 
         <button
-          className="w-full bg-black text-white py-2 rounded-lg"
+          className="w-full bg-black text-white py-2 rounded-lg mt-auto"
         >
           Add To Cart
         </button>
@@ -36,7 +37,6 @@ function ProductCard({ product }) {
       </div>
 
     </div>
-
   );
 }
 
